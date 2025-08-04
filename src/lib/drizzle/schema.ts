@@ -416,3 +416,6 @@ export type Activity = typeof activities.$inferSelect;
 export type NewActivity = typeof activities.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
+
+// Enum types
+export type ActivityType = (typeof activityTypeEnum.enumValues)[number];
