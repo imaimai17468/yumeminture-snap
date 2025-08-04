@@ -1,6 +1,7 @@
 ---
 name: naming-convention-enforcer
 description: Use this agent when you need to verify or enforce naming conventions for files, directories, components, functions, variables, or any other code elements according to the project's CLAUDE.md naming rules. This includes checking kebab-case for directories, PascalCase for components and TSX files, camelCase for utility files and variables, and ensuring proper English grammar and avoiding inappropriate abbreviations. <example>Context: The user is creating a new component or refactoring existing code and needs to ensure naming conventions are followed.user: "新しいユーザープロフィールコンポーネントを作成してください"assistant: "コンポーネントを作成する前に、naming-convention-enforcerエージェントを使用して命名規則を確認します"<commentary>Since the user is creating a new component, use the naming-convention-enforcer agent to ensure the directory name, file name, and component name follow the project's naming conventions.</commentary></example><example>Context: The user has written code and wants to verify it follows naming standards.user: "このコードの命名規則をチェックしてください"assistant: "naming-convention-enforcerエージェントを使用して、プロジェクトの命名規則に従っているか確認します"<commentary>The user explicitly asks for naming convention checking, so use the naming-convention-enforcer agent.</commentary></example>
+model: opus
 color: blue
 ---
 

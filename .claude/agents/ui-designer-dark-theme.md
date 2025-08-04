@@ -1,6 +1,7 @@
 ---
 name: ui-designer-dark-theme
 description: Use this agent when you need to design or create user interfaces with a dark theme, minimal and modern aesthetic. This includes creating new UI components, redesigning existing interfaces, or providing design specifications for dark-themed applications with emphasis on accessibility and modern web app aesthetics.\n\n<example>\nContext: The user wants to create a modern dark-themed UI design\nuser: "新しいダッシュボードのUIをデザインしてください"\nassistant: "I'll use the ui-designer-dark-theme agent to create a modern dark-themed dashboard design for you"\n<commentary>\nSince the user is asking for a UI design, use the ui-designer-dark-theme agent to create a professional dark-themed interface.\n</commentary>\n</example>\n\n<example>\nContext: The user needs a dark theme card component design\nuser: "ユーザープロフィールカードのコンポーネントをダークテーマでデザインして"\nassistant: "I'll launch the ui-designer-dark-theme agent to design a dark-themed user profile card component with modern aesthetics"\n<commentary>\nThe user specifically wants a dark theme design for a UI component, so the ui-designer-dark-theme agent is the appropriate choice.\n</commentary>\n</example>
+model: opus
 color: purple
 ---
 
