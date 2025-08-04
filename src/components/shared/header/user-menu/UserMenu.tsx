@@ -1,7 +1,13 @@
 "use client";
 
-import { LogOut, User as UserIcon } from "lucide-react";
+import {
+	Building2,
+	LogOut,
+	Settings as SettingsIcon,
+	User as UserIcon,
+} from "lucide-react";
 import Link from "next/link";
+import { signOut } from "@/actions/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -12,7 +18,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { UserWithEmail } from "@/entities/user";
-import { signOut } from "@/lib/auth";
 
 type UserMenuProps = {
 	user: UserWithEmail;
@@ -28,7 +33,7 @@ export const UserMenu = ({ user }: UserMenuProps) => {
 			<DropdownMenuTrigger asChild>
 				<button
 					type="button"
-					className="cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+					className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
 				>
 					<Avatar className="h-8 w-8">
 						<AvatarImage src={avatarUrl || undefined} alt={name} />
@@ -49,18 +54,27 @@ export const UserMenu = ({ user }: UserMenuProps) => {
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
-					<Link href="/profile" className="cursor-pointer">
+					<Link href={`/profile/${user.id}`}>
 						<UserIcon className="mr-2 h-4 w-4" />
 						<span>Profile</span>
 					</Link>
 				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<Link href="/organizations">
+						<Building2 className="mr-2 h-4 w-4" />
+						<span>Organizations</span>
+					</Link>
+				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<Link href="/settings">
+						<SettingsIcon className="mr-2 h-4 w-4" />
+						<span>Settings</span>
+					</Link>
+				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
-					className="cursor-pointer text-destructive focus:text-destructive"
-					onClick={async () => {
-						await signOut();
-						window.location.reload();
-					}}
+					className="text-destructive focus:text-destructive"
+					onClick={() => signOut()}
 				>
 					<LogOut className="mr-2 h-4 w-4" />
 					<span>Log out</span>

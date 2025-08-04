@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { UserWithEmail } from "@/entities/user";
-import { UserMenu } from "../user-menu/UserMenu";
+import { MobileMenu } from "../mobile-menu/MobileMenu";
 
 type AuthNavigationProps = {
 	user: UserWithEmail | null;
@@ -9,7 +9,7 @@ type AuthNavigationProps = {
 
 export const AuthNavigation = ({ user }: AuthNavigationProps) => {
 	if (user) {
-		return <UserMenu user={user} />;
+		return <MobileMenu user={user} />;
 	}
 
 	return (
