@@ -200,7 +200,7 @@ export const Timeline = ({
 													}`}
 												>
 													<AvatarImage
-														src={activity.userAvatar}
+														src={activity.userAvatar || undefined}
 														alt={activity.userName}
 													/>
 													<AvatarFallback className="text-xs sm:text-base">
@@ -257,12 +257,12 @@ export const Timeline = ({
 						</div>
 					</CardHeader>
 
-					{activity.type === "photo_uploaded" ? (
+					{activity.type === "photo_uploaded" && activity.photoUrl ? (
 						<CardContent className="space-y-3 p-4 pt-0 sm:space-y-4 sm:p-4">
 							<div className="mx-auto w-full sm:max-w-md">
 								<div className="relative aspect-square overflow-hidden rounded-lg">
 									<Image
-										src={activity.photoUrl}
+										src={activity.photoUrl || undefined}
 										alt="Uploaded photo"
 										fill
 										className="object-cover"
