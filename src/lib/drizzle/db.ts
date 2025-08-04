@@ -7,20 +7,19 @@ const getDatabaseUrl = () => {
 		return process.env.DATABASE_URL;
 	}
 
-	if (
-		!process.env.NEXT_PUBLIC_SUPABASE_URL ||
-		!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-	) {
-		throw new Error("Missing Supabase environment variables");
-	}
-
-	const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
-	const projectRef = supabaseUrl.hostname.split(".")[0];
-
-	return `postgresql://postgres.${projectRef}:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres`;
+	throw new Error(
+		"DATABASE_URL environment variable is required. " +
+			"Please set it in your .env.local file. " +
+			"You can find the connection string in your Supabase project settings under Settings > Database.",
+	);
 };
 
 const connectionString = getDatabaseUrl();
 
-const client = postgres(connectionString);
+const client = postgres(connectionString, {
+	max: 10, // 最大接続数
+	idle_timeout: 30, // アイドルタイムアウト（秒）
+	connect_timeout: 10, // 接続タイムアウト（秒）
+});
+
 export const db = drizzle(client, { schema });

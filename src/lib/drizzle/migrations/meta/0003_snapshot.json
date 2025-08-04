@@ -1,0 +1,821 @@
+{
+	"id": "2760ed01-60f8-4c54-ade6-4b9ae18f09f3",
+	"prevId": "c35616b1-0c7c-4206-897d-9055ff3d2a0e",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.activities": {
+			"name": "activities",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "activity_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"related_user_id": {
+					"name": "related_user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"related_photo_id": {
+					"name": "related_photo_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"related_organization_id": {
+					"name": "related_organization_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"metadata": {
+					"name": "metadata",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"activities_user_id_users_id_fk": {
+					"name": "activities_user_id_users_id_fk",
+					"tableFrom": "activities",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"activities_related_user_id_users_id_fk": {
+					"name": "activities_related_user_id_users_id_fk",
+					"tableFrom": "activities",
+					"tableTo": "users",
+					"columnsFrom": ["related_user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"activities_related_photo_id_photos_id_fk": {
+					"name": "activities_related_photo_id_photos_id_fk",
+					"tableFrom": "activities",
+					"tableTo": "photos",
+					"columnsFrom": ["related_photo_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"activities_related_organization_id_organizations_id_fk": {
+					"name": "activities_related_organization_id_organizations_id_fk",
+					"tableFrom": "activities",
+					"tableTo": "organizations",
+					"columnsFrom": ["related_organization_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.communication_statuses": {
+			"name": "communication_statuses",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status_type": {
+					"name": "status_type",
+					"type": "communication_status_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"message": {
+					"name": "message",
+					"type": "varchar(200)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {
+				"communication_statuses_user_id_idx": {
+					"name": "communication_statuses_user_id_idx",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"communication_statuses_type_expires_idx": {
+					"name": "communication_statuses_type_expires_idx",
+					"columns": [
+						{
+							"expression": "status_type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "expires_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"communication_statuses_user_id_users_id_fk": {
+					"name": "communication_statuses_user_id_users_id_fk",
+					"tableFrom": "communication_statuses",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"communication_statuses_user_id_unique": {
+					"name": "communication_statuses_user_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["user_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.friendships": {
+			"name": "friendships",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id_1": {
+					"name": "user_id_1",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id_2": {
+					"name": "user_id_2",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {
+				"friendships_user_id_1_idx": {
+					"name": "friendships_user_id_1_idx",
+					"columns": [
+						{
+							"expression": "user_id_1",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"friendships_user_id_2_idx": {
+					"name": "friendships_user_id_2_idx",
+					"columns": [
+						{
+							"expression": "user_id_2",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"friendships_user_id_1_users_id_fk": {
+					"name": "friendships_user_id_1_users_id_fk",
+					"tableFrom": "friendships",
+					"tableTo": "users",
+					"columnsFrom": ["user_id_1"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"friendships_user_id_2_users_id_fk": {
+					"name": "friendships_user_id_2_users_id_fk",
+					"tableFrom": "friendships",
+					"tableTo": "users",
+					"columnsFrom": ["user_id_2"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"friendships_user_id_1_user_id_2_unique": {
+					"name": "friendships_user_id_1_user_id_2_unique",
+					"nullsNotDistinct": false,
+					"columns": ["user_id_1", "user_id_2"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.organization_memberships": {
+			"name": "organization_memberships",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"organization_id": {
+					"name": "organization_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"role": {
+					"name": "role",
+					"type": "membership_role",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'member'"
+				},
+				"status": {
+					"name": "status",
+					"type": "membership_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"joined_at": {
+					"name": "joined_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {
+				"organization_memberships_user_id_idx": {
+					"name": "organization_memberships_user_id_idx",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"organization_memberships_org_status_idx": {
+					"name": "organization_memberships_org_status_idx",
+					"columns": [
+						{
+							"expression": "organization_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"organization_memberships_org_role_idx": {
+					"name": "organization_memberships_org_role_idx",
+					"columns": [
+						{
+							"expression": "organization_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "role",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"organization_memberships_user_id_users_id_fk": {
+					"name": "organization_memberships_user_id_users_id_fk",
+					"tableFrom": "organization_memberships",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"organization_memberships_organization_id_organizations_id_fk": {
+					"name": "organization_memberships_organization_id_organizations_id_fk",
+					"tableFrom": "organization_memberships",
+					"tableTo": "organizations",
+					"columnsFrom": ["organization_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"organization_memberships_user_id_unique": {
+					"name": "organization_memberships_user_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["user_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.organizations": {
+			"name": "organizations",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(200)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"organizations_name_unique": {
+					"name": "organizations_name_unique",
+					"nullsNotDistinct": false,
+					"columns": ["name"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.photo_users": {
+			"name": "photo_users",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"photo_id": {
+					"name": "photo_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {
+				"photo_users_photo_id_idx": {
+					"name": "photo_users_photo_id_idx",
+					"columns": [
+						{
+							"expression": "photo_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photo_users_user_id_idx": {
+					"name": "photo_users_user_id_idx",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"photo_users_photo_id_photos_id_fk": {
+					"name": "photo_users_photo_id_photos_id_fk",
+					"tableFrom": "photo_users",
+					"tableTo": "photos",
+					"columnsFrom": ["photo_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"photo_users_user_id_users_id_fk": {
+					"name": "photo_users_user_id_users_id_fk",
+					"tableFrom": "photo_users",
+					"tableTo": "users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"photo_users_photo_id_user_id_unique": {
+					"name": "photo_users_photo_id_user_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["photo_id", "user_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.photos": {
+			"name": "photos",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"friendship_id": {
+					"name": "friendship_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"photo_url": {
+					"name": "photo_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"photo_path": {
+					"name": "photo_path",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"uploaded_by": {
+					"name": "uploaded_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {
+				"photos_friendship_id_idx": {
+					"name": "photos_friendship_id_idx",
+					"columns": [
+						{
+							"expression": "friendship_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photos_uploaded_by_idx": {
+					"name": "photos_uploaded_by_idx",
+					"columns": [
+						{
+							"expression": "uploaded_by",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"photos_created_at_idx": {
+					"name": "photos_created_at_idx",
+					"columns": [
+						{
+							"expression": "created_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"photos_friendship_id_friendships_id_fk": {
+					"name": "photos_friendship_id_friendships_id_fk",
+					"tableFrom": "photos",
+					"tableTo": "friendships",
+					"columnsFrom": ["friendship_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"photos_uploaded_by_users_id_fk": {
+					"name": "photos_uploaded_by_users_id_fk",
+					"tableFrom": "photos",
+					"tableTo": "users",
+					"columnsFrom": ["uploaded_by"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.users": {
+			"name": "users",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"avatar_url": {
+					"name": "avatar_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "TIMEZONE('utc', NOW())"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"public.activity_type": {
+			"name": "activity_type",
+			"schema": "public",
+			"values": [
+				"friend_added",
+				"photo_uploaded",
+				"joined_organization",
+				"left_organization",
+				"status_changed",
+				"photo_tagged",
+				"organization_created"
+			]
+		},
+		"public.communication_status_type": {
+			"name": "communication_status_type",
+			"schema": "public",
+			"values": ["office", "social", "available", "busy"]
+		},
+		"public.membership_role": {
+			"name": "membership_role",
+			"schema": "public",
+			"values": ["admin", "member"]
+		},
+		"public.membership_status": {
+			"name": "membership_status",
+			"schema": "public",
+			"values": ["pending", "approved", "rejected"]
+		}
+	},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}
