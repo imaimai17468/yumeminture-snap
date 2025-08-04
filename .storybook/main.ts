@@ -12,6 +12,22 @@ const config: StorybookConfig = {
   },
   "staticDirs": [
     "../public"
-  ]
+  ],
+  webpackFinal: async (config) => {
+    // Node.jsモジュールのポリフィルを無効化
+    config.resolve = {
+      ...config.resolve,
+      fallback: {
+        ...config.resolve?.fallback,
+        net: false,
+        tls: false,
+        perf_hooks: false,
+        fs: false,
+        path: false,
+        crypto: false,
+      },
+    };
+    return config;
+  },
 };
 export default config;
