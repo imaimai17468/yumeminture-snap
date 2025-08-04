@@ -11,6 +11,7 @@
 - [アーキテクチャ](#アーキテクチャ)
 - [shadcn/ui 設定](#shadcnui-設定)
 - [専門エージェント](#専門エージェント)
+- [MCP サーバー](#mcp-サーバー)
 
 ---
 
@@ -142,6 +143,254 @@ Claude Code は日本語でコミュニケーションを行う必要があり�
 - [ ] プッシュ前の最終検証を実行済み
 - [ ] **lefthook を絶対に無視しない** - `LEFTHOOK=0`の使用禁止
 
+
+## プロジェクト概要
+
+### プロジェクト名
+**Yumeminture Snap** - 組織を超えた人脈形成プラットフォーム
+
+### コンセプト
+組織と組織がつながり、組織間のメンバーが写真を通じて繋がるソーシャルネットワーキングサービス。
+ビジネスにおける偶発的な出会いと継続的な関係構築を支援します。
+
+### 主要機能
+
+#### 1. 組織管理
+- ユーザーはログイン後、自分の所属する組織を選択
+- 組織への参加は承認制（管理者が承認）
+- ユーザーは1つの組織にのみ所属可能
+- 組織は不適切なユーザーをキック可能
+
+#### 2. 友達関係の構築
+- 写真撮影により友達関係を確立
+- 友達の友達まで可視化される拡張ネットワーク
+- 組織を超えた人脈形成を促進
+
+#### 3. コミュニケーション状態管理
+- 出社、懇親会参加などの状態を表示
+- コミュニケーション可能な状態をリアルタイムで共有
+- 友達の友達のコミュニケーション状態も確認可能
+
+#### 4. ネットワーク可視化
+- インタラクティブなネットワーク図
+- 友達の友達までの範囲で他組織のユーザーを表示
+- 組織間のつながりを視覚的に把握
+
+### DB構成
+
+#### Enum 定義
+
+##### membership_role
+組織メンバーの権限レベル。
+- `admin` - 管理者（組織設定変更、メンバー承認・削除可能）
+- `member` - 一般メンバー
+
+##### membership_status
+組織への参加申請状態。
+- `pending` - 承認待ち
+- `approved` - 承認済み
+- `rejected` - 拒否
+
+##### communication_status_type
+コミュニケーション可能状態のタイプ。
+- `office` - オフィスで勤務中
+- `social` - 懇親会参加中
+- `available` - コミュニケーション可能
+- `busy` - 取り込み中
+
+##### approval_method
+組織への参加承認方法。
+- `manual` - 管理者による手動承認
+- `auto` - 自動承認
+- `domain` - ドメインベース自動承認
+
+##### activity_type
+ユーザーアクティビティのタイプ。
+- `friend_added` - 友達追加
+- `photo_uploaded` - 写真アップロード
+- `joined_organization` - 組織参加
+- `left_organization` - 組織退出
+- `status_changed` - ステータス変更
+- `photo_tagged` - 写真にタグ付け
+- `organization_created` - 組織作成
+
+##### notification_type
+通知のタイプ。
+- `join_request` - 参加申請
+- `join_approved` - 参加承認
+- `join_rejected` - 参加拒否
+- `photo_tagged` - 写真にタグ付けされた
+- `new_friend` - 新しい友達
+- `member_removed` - メンバー削除
+- `role_changed` - 権限変更
+
+#### テーブル設計
+
+##### 1. users（ユーザー）
+既存のSupabase Authと連携するユーザープロフィール情報。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK, FK(auth.users) | Supabase Auth のユーザーID |
+| name | varchar(100) | NOT NULL | ユーザー名 |
+| avatar_url | text | NULL | プロフィール画像URL |
+| created_at | timestamp | NOT NULL | 作成日時 |
+| updated_at | timestamp | NOT NULL | 更新日時 |
+
+##### 2. organizations（組織）
+組織の基本情報を管理。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | 組織ID |
+| name | varchar(200) | NOT NULL, UNIQUE | 組織名 |
+| description | text | NULL | 組織の説明 |
+| approval_method | enum | DEFAULT 'manual' | 承認方法（manual/auto/domain） |
+| approval_domains | jsonb | DEFAULT '[]' | ドメインベース承認用のドメインリスト |
+| created_at | timestamp | NOT NULL | 作成日時 |
+| updated_at | timestamp | NOT NULL | 更新日時 |
+
+##### 3. organization_memberships（組織メンバーシップ）
+ユーザーと組織の所属関係を管理。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | メンバーシップID |
+| user_id | uuid | FK(users), UNIQUE | ユーザーID（1人1組織制約） |
+| organization_id | uuid | FK(organizations) | 組織ID |
+| role | enum | NOT NULL | 権限（admin/member） |
+| status | enum | NOT NULL | 状態（pending/approved/rejected） |
+| joined_at | timestamp | NULL | 参加承認日時 |
+| created_at | timestamp | NOT NULL | 申請日時 |
+| updated_at | timestamp | NOT NULL | 更新日時 |
+
+**インデックス**: (user_id), (organization_id, status), (organization_id, role)
+
+##### 4. friendships（友達関係）
+友達関係を管理。初回の写真撮影により成立。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | 友達関係ID |
+| user_id_1 | uuid | FK(users) | ユーザーID（小さい方） |
+| user_id_2 | uuid | FK(users) | ユーザーID（大きい方） |
+| created_at | timestamp | NOT NULL | 友達になった日時 |
+
+**制約**: UNIQUE(user_id_1, user_id_2)
+**インデックス**: (user_id_1), (user_id_2)
+
+##### 5. photos（写真）
+友達との写真を管理。同じ友達と複数回撮影可能。友達関係なしでも写真撮影可能。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | 写真ID |
+| friendship_id | uuid | FK(friendships), NULL | 友達関係ID（NULL可能） |
+| photo_url | text | NOT NULL | 写真URL |
+| photo_path | text | NOT NULL | 写真のストレージパス |
+| uploaded_by | uuid | FK(users) | アップロードしたユーザーID |
+| description | text | NULL | 写真の説明 |
+| created_at | timestamp | NOT NULL | 撮影日時 |
+
+**インデックス**: (friendship_id), (uploaded_by), (created_at)
+
+##### 6. photo_users（写真内のユーザー）
+写真に写っているユーザーを管理する中間テーブル。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | レコードID |
+| photo_id | uuid | FK(photos) | 写真ID |
+| user_id | uuid | FK(users) | ユーザーID |
+| created_at | timestamp | NOT NULL | 作成日時 |
+
+**制約**: UNIQUE(photo_id, user_id)
+**インデックス**: (photo_id), (user_id)
+
+##### 7. communication_statuses（コミュニケーション状態）
+ユーザーの現在のコミュニケーション可能状態を管理。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | 状態ID |
+| user_id | uuid | FK(users), UNIQUE | ユーザーID |
+| status_type | enum | NOT NULL | 状態タイプ（office/social/available/busy） |
+| message | varchar(200) | NULL | 状態メッセージ |
+| expires_at | timestamp | NULL | 状態の有効期限 |
+| created_at | timestamp | NOT NULL | 作成日時 |
+| updated_at | timestamp | NOT NULL | 更新日時 |
+
+**インデックス**: (user_id), (status_type, expires_at)
+
+##### 8. activities（アクティビティ）
+ユーザーの活動履歴を記録。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | アクティビティID |
+| user_id | uuid | FK(users) | ユーザーID |
+| type | enum | NOT NULL | アクティビティタイプ（friend_added/photo_uploaded/joined_organization/left_organization/status_changed/photo_tagged/organization_created） |
+| related_user_id | uuid | FK(users), NULL | 関連ユーザーID |
+| related_photo_id | uuid | FK(photos), NULL | 関連写真ID |
+| related_organization_id | uuid | FK(organizations), NULL | 関連組織ID |
+| metadata | jsonb | NULL | 追加メタデータ |
+| created_at | timestamp | NOT NULL | 作成日時 |
+
+##### 9. notifications（通知）
+ユーザーへの通知を管理。
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|---|------|------|
+| id | uuid | PK | 通知ID |
+| user_id | uuid | FK(users) | 通知対象ユーザーID |
+| type | enum | NOT NULL | 通知タイプ（join_request/join_approved/join_rejected/photo_tagged/new_friend/member_removed/role_changed） |
+| title | text | NOT NULL | 通知タイトル |
+| message | text | NULL | 通知メッセージ |
+| related_user_id | uuid | FK(users), NULL | 関連ユーザーID |
+| related_organization_id | uuid | FK(organizations), NULL | 関連組織ID |
+| related_photo_id | uuid | FK(photos), NULL | 関連写真ID |
+| is_read | boolean | NOT NULL, DEFAULT false | 既読フラグ |
+| created_at | timestamp | NOT NULL | 作成日時 |
+
+**インデックス**: (user_id), (created_at), (is_read)
+
+#### リレーション設計
+
+```mermaid
+erDiagram
+    users ||--o| organization_memberships : "belongs to"
+    organizations ||--o{ organization_memberships : "has members"
+    users ||--o{ friendships : "user_id_1 or user_id_2"
+    friendships ||--o{ photos : "has photos"
+    users ||--o{ photos : "uploaded by"
+    photos ||--o{ photo_users : "contains users"
+    users ||--o{ photo_users : "appears in photos"
+    users ||--o| communication_statuses : "has status"
+    users ||--o{ activities : "performs"
+    users ||--o{ notifications : "receives"
+    organizations ||--o{ activities : "related to"
+    photos ||--o{ activities : "related to"
+    photos ||--o{ notifications : "related to"
+```
+
+#### データ整合性ルール
+
+1. **ユーザーの組織所属**
+   - 1ユーザーは1組織のみ所属可能（organization_membershipsのuser_idはUNIQUE）
+   - statusが'approved'の場合のみアクティブなメンバー
+
+2. **友達関係**
+   - 双方向の関係を単一レコードで表現（user_id_1 < user_id_2）
+   - 自分自身とは友達になれない
+
+3. **写真管理**
+   - 友達関係なしでも写真を撮影可能（friendship_id は NULL 可能）
+   - 写真には必ず2人以上のユーザーが紐付く（photo_users）
+   - アップロードしたユーザーも写真に含まれる
+
+4. **コミュニケーション状態**
+   - 1ユーザーにつき1つの現在状態のみ
+   - expires_atが過ぎた状態は無効とみなす
 
 ## 開発コマンド
 
@@ -395,3 +644,184 @@ src/
 ### エージェントの活用方法
 
 これらの専門エージェントは、Claude Code によって自動的に呼び出されます。特定のタスクを実行する際、Claude Code は適切なエージェントを選択し、そのエージェントの専門知識を活用して作業を進めます。ユーザーは通常通りタスクを依頼するだけで、最適なエージェントが選択されます。
+
+## MCP サーバー
+
+MCP (Model Context Protocol) サーバーは、Claude Code に追加の機能を提供する外部ツールです。本プロジェクトでは、以下の3つの MCP サーバーを利用できます。
+
+### context7
+**役割**: ライブラリのドキュメントとコード例を取得する MCP サーバー
+
+**主な機能**:
+- ライブラリ名から Context7 互換 ID の解決
+- 最新のドキュメントとコード例の取得
+- トピック別のドキュメント検索
+
+**使用方法**:
+```typescript
+// 1. ライブラリ名から ID を解決
+mcp__context7__resolve-library-id("react")
+
+// 2. ドキュメントを取得
+mcp__context7__get-library-docs("/facebook/react", {
+  tokens: 10000,
+  topic: "hooks"
+})
+```
+
+**使用例**:
+- React Hooks の最新の使い方を調べる
+- Next.js の App Router の詳細なドキュメントを取得
+- Supabase の認証機能の実装例を参照
+
+### playwright
+**役割**: ブラウザ自動化とテストを行う MCP サーバー
+
+**主な機能**:
+- ブラウザの操作（ナビゲーション、クリック、入力）
+- スクリーンショットとページスナップショットの取得
+- ネットワークリクエストとコンソールログの監視
+- 複数タブの管理
+- JavaScript の実行
+
+**使用方法**:
+```typescript
+// ページへの移動
+mcp__playwright__browser_navigate({ url: "https://example.com" })
+
+// 要素のクリック
+mcp__playwright__browser_click({
+  element: "ログインボタン",
+  ref: "button[data-testid='login']"
+})
+
+// テキスト入力
+mcp__playwright__browser_type({
+  element: "ユーザー名入力欄",
+  ref: "input[name='username']",
+  text: "testuser"
+})
+
+// スクリーンショット取得
+mcp__playwright__browser_take_screenshot({
+  fullPage: true,
+  filename: "screenshot.png"
+})
+```
+
+**使用例**:
+- UI の動作確認とスクリーンショット撮影
+- フォームの自動入力とテスト
+- ページのアクセシビリティ検証
+- E2E テストの実行
+
+### serena
+**役割**: コードベースの意味的解析と編集を行う MCP サーバー
+
+**主な機能**:
+- シンボル（関数、クラス、変数）の検索と解析
+- コードの意味的な編集（シンボル単位での置換）
+- プロジェクトメモリの管理
+- ファイルとディレクトリの探索
+- 正規表現によるコード検索と置換
+
+**使用方法**:
+```typescript
+// シンボルの概要を取得
+mcp__serena__get_symbols_overview({
+  relative_path: "src/components"
+})
+
+// 特定のシンボルを検索
+mcp__serena__find_symbol({
+  name_path: "UserProfile",
+  include_body: true
+})
+
+// シンボルの参照を検索
+mcp__serena__find_referencing_symbols({
+  name_path: "UserProfile",
+  relative_path: "src/components/UserProfile.tsx"
+})
+
+// シンボル単位での編集
+mcp__serena__replace_symbol_body({
+  name_path: "handleSubmit",
+  relative_path: "src/components/Form.tsx",
+  body: "const handleSubmit = async (data) => { ... }"
+})
+```
+
+**使用例**:
+- 大規模なリファクタリング作業
+- コードベース全体の構造把握
+- 特定の関数やクラスの使用箇所調査
+- 意味的に正確なコード編集
+
+### MCP サーバーの活用ガイドライン
+
+1. **context7 を使う場面**:
+   - 外部ライブラリの使い方が不明な時
+   - 最新の API ドキュメントが必要な時
+   - ベストプラクティスやコード例を参照したい時
+
+2. **playwright を使う場面**:
+   - UI の見た目や動作を確認したい時
+   - ユーザーフローをテストしたい時
+   - ブラウザでの実際の挙動を検証したい時
+
+3. **serena を使う場面**:
+   - 大きなコードベースを理解したい時
+   - リファクタリングを行う時
+   - 特定のシンボルの影響範囲を調査する時
+   - 通常のテキスト編集では難しい意味的な編集を行う時
+
+これらの MCP サーバーは相互に補完的な関係にあり、タスクに応じて適切に組み合わせることで、より効率的な開発が可能になります。
+
+## よくあるエラーと対処法
+
+### revalidatePath エラー
+
+**エラー内容**:
+```
+Error: You're importing a component that needs "revalidatePath". That only works in a Server Component...
+```
+
+**原因**:
+`revalidatePath` は Server Component でのみ使用可能な関数ですが、Client Component から直接的または間接的にインポートしようとすると発生します。
+
+**対処法**:
+
+1. **Gateway から revalidatePath を削除**
+   - Gateway ファイル（`src/gateways/*/index.ts`）から `revalidatePath` のインポートと使用を削除
+   - Gateway は純粋なデータ取得/更新のみを担当
+
+2. **Server Actions で revalidatePath を使用**
+   - `src/app/*/actions.ts` ファイルでサーバーアクションを作成
+   - サーバーアクションの中で `revalidatePath` を呼び出す
+   - Client Component からはサーバーアクションを呼び出す
+
+**例**:
+```typescript
+// ❌ 間違い: Gateway で revalidatePath を使用
+// src/gateways/organization/index.ts
+import { revalidatePath } from "next/cache"; // NG
+
+export const createOrganization = async (data) => {
+  // ...
+  revalidatePath("/organizations"); // NG
+};
+
+// ✅ 正しい: Server Action で revalidatePath を使用
+// src/app/organizations/actions.ts
+"use server";
+import { revalidatePath } from "next/cache";
+
+export const createOrganizationAction = async (data) => {
+  const result = await createOrganizationGateway(data);
+  if (result.success) {
+    revalidatePath("/organizations"); // OK
+  }
+  return result;
+};
+```
