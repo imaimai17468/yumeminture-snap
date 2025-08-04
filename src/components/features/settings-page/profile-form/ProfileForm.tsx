@@ -102,25 +102,28 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-				<div className="flex items-center gap-6">
+			<form
+				onSubmit={form.handleSubmit(onSubmit)}
+				className="space-y-4 sm:space-y-6"
+			>
+				<div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
 					<div className="relative">
-						<Avatar className="h-24 w-24">
+						<Avatar className="h-20 w-20 sm:h-24 sm:w-24">
 							<AvatarImage src={avatarUrl || undefined} alt={displayName} />
-							<AvatarFallback className="text-2xl">
+							<AvatarFallback className="text-xl sm:text-2xl">
 								{displayName.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<button
 							type="button"
 							onClick={handleAvatarClick}
-							className="absolute right-0 bottom-0 cursor-pointer rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-transform hover:scale-110"
+							className="-right-1 -bottom-1 absolute rounded-full bg-primary p-1.5 text-primary-foreground shadow-lg transition-transform hover:scale-110 sm:right-0 sm:bottom-0 sm:p-2"
 							disabled={isPending || isUploading}
 						>
 							{isUploading ? (
-								<Loader2 className="h-4 w-4 animate-spin" />
+								<Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
 							) : (
-								<Camera className="h-4 w-4" />
+								<Camera className="h-3 w-3 sm:h-4 sm:w-4" />
 							)}
 						</button>
 						<input
@@ -132,14 +135,16 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
 							disabled={isPending || isUploading}
 						/>
 					</div>
-					<div className="flex-1 space-y-2">
+					<div className="flex-1 space-y-1 text-center sm:space-y-2 sm:text-left">
 						<div>
-							<p className="font-medium text-sm">Profile Image</p>
-							<p className="text-muted-foreground text-sm">
+							<p className="font-medium text-xs sm:text-sm">Profile Image</p>
+							<p className="text-muted-foreground text-xs sm:text-sm">
 								Click to change image (max 5MB)
 							</p>
 						</div>
-						{isUploading && <Progress value={uploadProgress} className="h-2" />}
+						{isUploading && (
+							<Progress value={uploadProgress} className="h-1.5 sm:h-2" />
+						)}
 					</div>
 				</div>
 
@@ -148,18 +153,19 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
 					name="name"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Name</FormLabel>
+							<FormLabel className="text-sm">Name</FormLabel>
 							<FormControl>
 								<Input
 									placeholder="Enter your name"
 									{...field}
 									disabled={isPending}
+									className="text-sm sm:text-base"
 								/>
 							</FormControl>
-							<FormDescription>
+							<FormDescription className="text-xs sm:text-sm">
 								The name displayed on your profile
 							</FormDescription>
-							<FormMessage />
+							<FormMessage className="text-xs sm:text-sm" />
 						</FormItem>
 					)}
 				/>
@@ -167,11 +173,11 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
 				<Button
 					type="submit"
 					disabled={isPending}
-					className="w-full cursor-pointer"
+					className="w-full text-sm sm:text-base"
 				>
 					{isPending ? (
 						<>
-							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							<Loader2 className="mr-2 h-3 w-3 animate-spin sm:h-4 sm:w-4" />
 							Updating...
 						</>
 					) : (
