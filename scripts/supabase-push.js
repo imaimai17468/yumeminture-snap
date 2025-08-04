@@ -18,7 +18,8 @@ if (!DATABASE_URL) {
 console.log('🚀 Supabaseマイグレーションを実行中...');
 
 try {
-  execSync(`bunx supabase db push --db-url "${DATABASE_URL}"`, { 
+  // --include-allフラグを追加して、すべてのマイグレーションを適用
+  execSync(`bunx supabase db push --db-url "${DATABASE_URL}" --include-all`, { 
     stdio: 'inherit' 
   });
   console.log('✅ マイグレーションが完了しました！');

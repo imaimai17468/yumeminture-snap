@@ -1,0 +1,1 @@
+ALTER TABLE "organizations" ALTER COLUMN "approval_method" DROP NOT NULL;
