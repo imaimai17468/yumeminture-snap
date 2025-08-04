@@ -262,7 +262,7 @@ export const Timeline = ({
 							<div className="mx-auto w-full sm:max-w-md">
 								<div className="relative aspect-square overflow-hidden rounded-lg">
 									<Image
-										src={activity.photoUrl || undefined}
+										src={activity.photoUrl}
 										alt="Uploaded photo"
 										fill
 										className="object-cover"

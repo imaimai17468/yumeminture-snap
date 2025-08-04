@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import {
+	type ActivityType,
 	activities,
 	communicationStatuses,
 	friendships,
@@ -428,14 +429,18 @@ const seedData = async () => {
 		console.log("✅ コミュニケーションステータスを作成しました");
 
 		// アクティビティデータを作成
-		const activityTypes = [
+		const activityTypes: ActivityType[] = [
 			"friend_added",
 			"photo_uploaded",
 			"joined_organization",
 			"status_changed",
 			"photo_tagged",
-		] as const;
-		const testActivities = [];
+		];
+		const testActivities: {
+			userId: string;
+			type: ActivityType;
+			createdAt: Date;
+		}[] = [];
 
 		// アクティブなユーザーのアクティビティ
 		for (let i = 0; i < 20; i++) {
