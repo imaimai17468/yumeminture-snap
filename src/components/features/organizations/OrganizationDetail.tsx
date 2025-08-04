@@ -170,16 +170,28 @@ export const OrganizationDetail = ({
 							</Badge>
 						)}
 						{isAdmin && (
-							<Button
-								variant="outline"
-								asChild
-								size="sm"
-								className="w-full sm:size-default sm:w-auto"
-							>
-								<a href={`/organizations/${organization.id}/edit`}>
-									Manage Organization
-								</a>
-							</Button>
+							<div className="flex flex-col gap-2 sm:flex-row">
+								<Button
+									variant="outline"
+									asChild
+									size="sm"
+									className="w-full sm:size-default sm:w-auto"
+								>
+									<a href={`/organizations/${organization.id}/edit`}>
+										Manage Organization
+									</a>
+								</Button>
+								<Button
+									variant="outline"
+									asChild
+									size="sm"
+									className="w-full sm:size-default sm:w-auto"
+								>
+									<a href={`/organizations/${organization.id}/analytics`}>
+										View Analytics
+									</a>
+								</Button>
+							</div>
 						)}
 					</div>
 				</CardHeader>

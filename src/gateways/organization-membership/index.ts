@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, inArray, or, sql } from "drizzle-orm";
 import {
 	type CreateOrganizationMembership,
 	type OrganizationMembership,
@@ -10,8 +10,13 @@ import {
 import { createActivity } from "@/gateways/activity";
 import { db } from "@/lib/drizzle/db";
 import {
+	activities,
+	communicationStatuses,
+	friendships,
 	organizationMemberships,
 	organizations,
+	photos,
+	photoUsers,
 	users,
 } from "@/lib/drizzle/schema";
 import { AppError, tryCatch } from "@/lib/error-handling";
@@ -404,4 +409,172 @@ export const removeMembership = async (
 		console.error("Membership deletion error:", error);
 		return { success: false, error: "Deletion failed" };
 	}
+};
+
+export const fetchOrganizationAnalyticsData = async (
+	organizationId: string,
+) => {
+	const [
+		members,
+		allActivities,
+		allPhotos,
+		allCommunicationStatuses,
+		allFriendships,
+	] = await Promise.all([
+		// メンバー一覧（承認済みのみ）
+		db
+			.select({
+				id: organizationMemberships.id,
+				userId: organizationMemberships.userId,
+				organizationId: organizationMemberships.organizationId,
+				role: organizationMemberships.role,
+				status: organizationMemberships.status,
+				joinedAt: organizationMemberships.joinedAt,
+				createdAt: organizationMemberships.createdAt,
+				updatedAt: organizationMemberships.updatedAt,
+				user: users,
+			})
+			.from(organizationMemberships)
+			.innerJoin(users, eq(organizationMemberships.userId, users.id))
+			.where(
+				and(
+					eq(organizationMemberships.organizationId, organizationId),
+					eq(organizationMemberships.status, "approved"),
+				),
+			),
+
+		// 全メンバーのアクティビティ（過去3ヶ月）
+		db
+			.select()
+			.from(activities)
+			.where(
+				and(
+					inArray(
+						activities.userId,
+						db
+							.select({ userId: organizationMemberships.userId })
+							.from(organizationMemberships)
+							.where(
+								and(
+									eq(organizationMemberships.organizationId, organizationId),
+									eq(organizationMemberships.status, "approved"),
+								),
+							),
+					),
+					gte(activities.createdAt, sql`NOW() - INTERVAL '3 months'`),
+				),
+			),
+
+		// 全メンバーの写真（過去3ヶ月）
+		db
+			.select({
+				photo: photos,
+				taggedUsers: sql<string[]>`ARRAY_AGG(${photoUsers.userId})`,
+			})
+			.from(photos)
+			.leftJoin(photoUsers, eq(photos.id, photoUsers.photoId))
+			.where(
+				and(
+					inArray(
+						photos.uploadedBy,
+						db
+							.select({ userId: organizationMemberships.userId })
+							.from(organizationMemberships)
+							.where(
+								and(
+									eq(organizationMemberships.organizationId, organizationId),
+									eq(organizationMemberships.status, "approved"),
+								),
+							),
+					),
+					gte(photos.createdAt, sql`NOW() - INTERVAL '3 months'`),
+				),
+			)
+			.groupBy(photos.id),
+
+		// 現在のコミュニケーションステータス
+		db
+			.select()
+			.from(communicationStatuses)
+			.where(
+				inArray(
+					communicationStatuses.userId,
+					db
+						.select({ userId: organizationMemberships.userId })
+						.from(organizationMemberships)
+						.where(
+							and(
+								eq(organizationMemberships.organizationId, organizationId),
+								eq(organizationMemberships.status, "approved"),
+							),
+						),
+				),
+			),
+
+		// 全メンバーの友達関係
+		db
+			.select()
+			.from(friendships)
+			.where(
+				or(
+					inArray(
+						friendships.userId1,
+						db
+							.select({ userId: organizationMemberships.userId })
+							.from(organizationMemberships)
+							.where(
+								and(
+									eq(organizationMemberships.organizationId, organizationId),
+									eq(organizationMemberships.status, "approved"),
+								),
+							),
+					),
+					inArray(
+						friendships.userId2,
+						db
+							.select({ userId: organizationMemberships.userId })
+							.from(organizationMemberships)
+							.where(
+								and(
+									eq(organizationMemberships.organizationId, organizationId),
+									eq(organizationMemberships.status, "approved"),
+								),
+							),
+					),
+				),
+			),
+	]);
+
+	return {
+		members: members.map((m) => ({
+			...m,
+			createdAt: m.createdAt.toISOString(),
+			updatedAt: m.updatedAt.toISOString(),
+			joinedAt: m.joinedAt?.toISOString() || null,
+			user: {
+				...m.user,
+				createdAt: m.user.createdAt.toISOString(),
+				updatedAt: m.user.updatedAt.toISOString(),
+			},
+		})),
+		activities: allActivities.map((a) => ({
+			...a,
+			createdAt: a.createdAt.toISOString(),
+		})),
+		photos: allPhotos.map((p) => ({
+			...p.photo,
+			createdAt: p.photo.createdAt.toISOString(),
+			taggedUsers: p.taggedUsers || [],
+		})),
+		communicationStatuses: allCommunicationStatuses.map((cs) => ({
+			...cs,
+			createdAt: cs.createdAt.toISOString(),
+			updatedAt: cs.updatedAt.toISOString(),
+			expiresAt: cs.expiresAt?.toISOString() || null,
+		})),
+		friendships: allFriendships.map((f) => ({
+			...f,
+			createdAt: f.createdAt.toISOString(),
+		})),
+	};
 };
